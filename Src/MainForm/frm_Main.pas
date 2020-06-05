@@ -585,6 +585,13 @@ type
     tbxDoSearch: TTBXItem;
     tbxMoonCalc: TTBXItem;
     actViewMoonCalc: TAction;
+    TBAdd_PointNew: TTBXItem;
+    MarksNewImageList: TTBXImageList;
+    TBAdd_LineNew: TTBXItem;
+    NMarksGroupNew: TTBGroupItem;
+    TBXSeparatorItem24: TTBXSeparatorItem;
+    TBAdd_PolyNew: TTBXItem;
+    TBAdd_Sector: TTBXItem;
 
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -832,6 +839,7 @@ type
     procedure actViewMoonCalcExecute(Sender: TObject);
     procedure tbxYandexWeatherClick(Sender: TObject);
     procedure actConfigUsePrevForVectorLayersExecute(Sender: TObject);
+    procedure TBAddGeometryClick(Sender: TObject);
   private
     FactlstProjections: TActionList;
     FactlstLanguages: TActionList;
@@ -5629,6 +5637,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TfrmMain.TBAddGeometryClick(Sender: TObject);
+begin
+  // todo
 end;
 
 procedure TfrmMain.TBEditMagnetDrawClick(Sender: TObject);
