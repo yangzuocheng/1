@@ -342,6 +342,11 @@ object frmMain: TfrmMain
             Caption = 'Placemarks'
             Hint = ''
           end
+          object TBXVisibilityToggleItem4: TTBXVisibilityToggleItem
+            Caption = 'Placemarks New'
+            Control = TBMarksToolbarNew
+            Images = MenusImageList
+          end
           object TBXVisibilityToggleItem2: TTBXVisibilityToggleItem
             Control = TBXToolBarSearch
             Images = MenusImageList
@@ -1019,6 +1024,17 @@ object frmMain: TfrmMain
         object tbiFavoriteItems: TTBGroupItem
         end
       end
+    end
+    object TBMarksToolbarNew: TTBXToolbar
+      Left = 548
+      Top = 25
+      Caption = 'Placemarks New'
+      DockPos = 433
+      DockRow = 1
+      Images = MarksNewImageList
+      LinkSubitems = NMarksGroupNew
+      Stretch = True
+      TabOrder = 9
     end
   end
   object TBDockBottom: TTBXDock

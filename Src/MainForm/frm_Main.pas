@@ -592,6 +592,8 @@ type
     TBXSeparatorItem24: TTBXSeparatorItem;
     TBAdd_PolyNew: TTBXItem;
     TBAdd_Sector: TTBXItem;
+    TBMarksToolbarNew: TTBXToolbar;
+    TBXVisibilityToggleItem4: TTBXVisibilityToggleItem;
 
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
