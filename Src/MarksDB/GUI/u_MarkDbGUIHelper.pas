@@ -29,6 +29,12 @@ uses
   Classes,
   Forms,
   UITypes,
+
+  t_GeoTypes,
+  i_MapViewGoto,
+  frm_MarkCoordinatesEdit,
+  frm_MarkEditPointNew,
+
   i_PathConfig,
   i_LanguageManager,
   i_InterfaceListStatic,
@@ -77,6 +83,9 @@ uses
 type
   TMarkDbGUIHelper = class
   private
+    FfrmMarkCoordinatesEdit: TfrmMarkCoordinatesEdit;
+    FfrmMarkEditPointNew: TfrmMarkEditPointNew;
+
     FMarkSystem: IMarkSystem;
     FMarkFactoryConfig: IMarkFactoryConfig;
     FMarksGUIConfig: IMarksGUIConfig;
@@ -108,6 +117,11 @@ type
     ): IInterfaceListStatic;
     function IsMarksDBWritable: Boolean;
   public
+    procedure AddGeometryModal(
+      const AMarkType: Byte;
+      const AMapGoto: IMapViewGoto
+    );
+
     function GetMarkIdCaption(const AMarkId: IMarkId): string;
 
     function DeleteMarkModal(
@@ -227,6 +241,7 @@ uses
   i_MarkCategoryTree,
   i_NotifierOperation,
   i_VectorItemTreeImporter,
+  u_GeoFunc,
   u_ResStrings,
   u_GeometryFunc,
   u_StringListStatic,
@@ -355,6 +370,28 @@ begin
   FImportDialog := TOpenDialog.Create(nil);
   FImportDialog.Name := 'ImportDialog';
   FImportDialog.Options := [ofAllowMultiSelect, ofEnableSizing];
+
+
+  FfrmMarkCoordinatesEdit :=
+    TfrmMarkCoordinatesEdit.Create(
+      ALanguageManager,
+      AVectorGeometryLonLatFactory
+    );
+  
+  FfrmMarkEditPointNew := TfrmMarkEditPointNew.Create(
+    ALanguageManager,
+    AMediaPath,
+    AProjectionSetChangeable,
+    AVectorGeometryLonLatFactory,
+    AAppearanceOfMarkFactory,
+    FMarkSystem.MarkDb.Factory,
+    FMarkSystem.CategoryDB,
+    FMarkSystem.MarkDb.Factory.MarkPictureList,
+    AViewPortState,
+    ACoordRepresentationConfig,
+    ACoordFromStringParser,
+    ACoordToStringConverter
+  );
 end;
 
 destructor TMarkDbGUIHelper.Destroy;
@@ -370,6 +407,10 @@ begin
   FreeAndNil(FfrmMarkInfo);
   FreeAndNil(FExportDialog);
   FreeAndNil(FImportDialog);
+
+  FreeAndNil(FfrmMarkCoordinatesEdit);
+  FreeAndNil(FfrmMarkEditPointNew);
+  
   inherited;
 end;
 
@@ -1267,6 +1308,130 @@ begin
   end;
   if not VIsFound then begin
     MessageDlg(_('Please, select category with at least one polygon!'), mtWarning, [mbOk], 0);
+  end;
+end;
+
+procedure TMarkDbGUIHelper.AddGeometryModal(
+  const AMarkType: Byte;
+  const AMapGoto: IMapViewGoto
+);
+
+type
+  TVectorDataItemArray = array of IVectorDataItem;
+
+  function IsGeometryExists(
+    const AGeometry: IGeometryLonLat;
+    out AItems: TVectorDataItemArray
+  ): Boolean;
+  var
+    I, J: Integer;
+    VList: IMarkCategoryList;
+    VSubset: IVectorItemSubset;
+  begin
+    AItems := nil;
+
+    VList := FMarkSystem.CategoryDB.GetCategoriesList;
+
+    VSubset :=
+      FMarkSystem.MarkDb.GetMarkSubsetByCategoryListInRect(
+        AGeometry.Bounds.Rect,
+        VList,
+        True, // include hidden marks
+        DoublePoint(0, 0)
+      );
+
+    if not Assigned(VSubset) then begin
+      Result := False;
+      Exit;
+    end;
+    
+    J := 0;
+    for I := 0 to VSubset.Count - 1 do begin
+      if AGeometry.IsSameGeometry(VSubset.Items[I].Geometry) then begin
+        SetLength(AItems, J+1);
+        AItems[J] := VSubset.Items[I];
+        Inc(J);
+      end;
+    end;
+
+    Result := J > 0;
+  end;
+
+  function AllowAddGeometry(const AMark: IVectorDataItem): Boolean;
+  var
+    I: Integer;
+    VMsg: string;
+    VResult: Integer;
+    VItems: TVectorDataItemArray;
+  begin
+    Result := AMark <> nil;
+
+    if Result and IsGeometryExists(AMark.Geometry, VItems) then begin
+
+      if Length(VItems) = 1 then begin
+        VMsg := Format(
+          _('There is a Mark with same coordinates ("%s").' + #13#10 +
+            'Do you want to replace it?'),
+          [VItems[0].Name]
+        );
+      end else begin
+        VMsg := Format(
+          _('There are %d Marks with same coordinates.' + #13#10 +
+            'Do you want to replace them all with the new mark?'),
+          [Length(VItems)]
+        );
+      end;
+
+      VResult := MessageDlg(VMsg, mtConfirmation, [mbYes, mbCancel], 0);
+
+      case VResult of
+        mrYes: begin
+          for I := 0 to Length(VItems) - 1 do begin
+            // delete marks with same coordinates from db
+            FMarkSystem.MarkDb.UpdateMark(VItems[I], nil);
+          end;
+        end;
+        mrCancel: begin
+          Result := False;
+        end;
+      end;
+    end;
+  end;
+
+var
+  VMark: IVectorDataItem;
+  VGeometry: IGeometryLonLat;
+begin
+  if not IsMarksDBWritable then begin
+    Exit; // db is read-only
+  end;
+
+  VMark := nil;
+
+  case AMarkType of
+    1: begin
+      VGeometry := FfrmMarkCoordinatesEdit.GetLonLatPoint; // show editor #1
+      if VGeometry = nil then begin
+        Exit; // cancelled by user
+      end;
+      VMark := FMarkSystem.MarkDb.Factory.CreateNewMark(VGeometry, '', '');
+      VMark := FfrmMarkEditPointNew.AddMark(VMark); // show editor #2
+    end;
+    
+    2, 3, 4: begin
+      // todo
+      MessageDlg('Not implemented yet...', mtInformation, [mbOk], 0);
+    end;
+  else
+    raise Exception.CreateFmt('Unexpected MarkType value: %d', [AMarkType]);
+  end;
+
+  if AllowAddGeometry(VMark) then begin
+    // add mark into db
+    FMarkSystem.MarkDb.UpdateMark(nil, VMark);
+
+    // navigate screen to mark position
+    AMapGoto.FitRectToScreen(VMark.Geometry.Bounds.Rect);
   end;
 end;
 

@@ -5642,8 +5642,16 @@ begin
 end;
 
 procedure TfrmMain.TBAddGeometryClick(Sender: TObject);
+var
+  VItem: TTBXItem;
 begin
-  // todo
+  if Sender is TTBXItem then begin
+    VItem := Sender as TTBXItem;
+    Assert(VItem.GroupIndex = 200605);
+    FMarkDBGUI.AddGeometryModal(VItem.Tag, FMapGoto);
+  end else begin
+    Assert(False);
+  end;
 end;
 
 procedure TfrmMain.TBEditMagnetDrawClick(Sender: TObject);

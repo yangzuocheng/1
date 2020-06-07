@@ -734,6 +734,8 @@ uses
   u_MarkerSimpleConfig in 'Src\Marker\u_MarkerSimpleConfig.pas',
   u_MarkerSimpleConfigStatic in 'Src\Marker\u_MarkerSimpleConfigStatic.pas',
   u_TextDrawerBasic in 'Src\Marker\u_TextDrawerBasic.pas',
+  frm_MarkCoordinatesEdit in 'Src\MarksDB\GUI\New\frm_MarkCoordinatesEdit.pas' {frmMarkCoordinatesEdit},
+  frm_MarkEditPointNew in 'Src\MarksDB\GUI\New\frm_MarkEditPointNew.pas',
   fr_JpegImportOptions in 'Src\MarksDB\GUI\fr_JpegImportOptions.pas' {frJpegImportOptions: TFrame},
   fr_MarkCategorySelectOrAdd in 'Src\MarksDB\GUI\fr_MarkCategorySelectOrAdd.pas' {frMarkCategorySelectOrAdd: TFrame},
   fr_MarkDescription in 'Src\MarksDB\GUI\fr_MarkDescription.pas' {frMarkDescription: TFrame},
