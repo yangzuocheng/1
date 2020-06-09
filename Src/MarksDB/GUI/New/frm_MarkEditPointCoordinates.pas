@@ -9,6 +9,7 @@ uses
   Forms,
   Dialogs,
   StdCtrls,
+  UITypes,
   t_GeoTypes,
   i_LanguageManager,
   i_GeometryLonLat,

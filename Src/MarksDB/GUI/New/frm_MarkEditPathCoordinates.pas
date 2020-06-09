@@ -13,6 +13,8 @@ uses
   Forms,
   Dialogs,
   StdCtrls,
+  StrUtils,
+  UITypes,
   t_GeoTypes,
   i_LanguageManager,
   i_DoublePointsAggregator,
@@ -50,7 +52,6 @@ type
 implementation
 
 uses
-  StrUtils,
   gnugettext,
   u_DoublePointsAggregator;
 
