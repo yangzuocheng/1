@@ -1,10 +1,10 @@
-object frmMarkCoordinatesEdit: TfrmMarkCoordinatesEdit
+object frmMarkEditPointCoordinates: TfrmMarkEditPointCoordinates
   Left = 0
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Add New Placemark'
-  ClientHeight = 85
-  ClientWidth = 321
+  ClientHeight = 80
+  ClientWidth = 344
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -26,15 +26,16 @@ object frmMarkCoordinatesEdit: TfrmMarkCoordinatesEdit
   object edtCoords: TEdit
     Left = 8
     Top = 24
-    Width = 306
+    Width = 329
     Height = 21
     Align = alCustom
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
+    ExplicitWidth = 306
   end
   object btnNext: TButton
-    Left = 156
-    Top = 54
+    Left = 180
+    Top = 51
     Width = 75
     Height = 25
     Caption = 'Next'
@@ -42,8 +43,8 @@ object frmMarkCoordinatesEdit: TfrmMarkCoordinatesEdit
     TabOrder = 1
   end
   object btnCancel: TButton
-    Left = 237
-    Top = 54
+    Left = 261
+    Top = 51
     Width = 75
     Height = 25
     Caption = 'Cancel'

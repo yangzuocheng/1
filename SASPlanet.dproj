@@ -922,8 +922,11 @@
     </DCCReference>
     <DCCReference Include="Src\MarksDB\GUI\i_MarksExplorerConfig.pas" />
     <DCCReference Include="Src\MarksDB\GUI\i_MarksGUIConfig.pas" />
-    <DCCReference Include="Src\MarksDB\GUI\New\frm_MarkCoordinatesEdit.pas">
-      <Form>frmMarkCoordinatesEdit</Form>
+    <DCCReference Include="Src\MarksDB\GUI\New\frm_MarkEditPathCoordinates.pas">
+      <Form>frmMarkEditPathCoordinates</Form>
+    </DCCReference>
+    <DCCReference Include="Src\MarksDB\GUI\New\frm_MarkEditPointCoordinates.pas">
+      <Form>frmMarkEditPointCoordinates</Form>
     </DCCReference>
     <DCCReference Include="Src\MarksDB\GUI\New\frm_MarkEditPointNew.pas">
       <Form>frmMarkEditPointNew</Form>

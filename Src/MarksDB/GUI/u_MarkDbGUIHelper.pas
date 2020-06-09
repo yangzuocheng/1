@@ -32,7 +32,8 @@ uses
 
   t_GeoTypes,
   i_MapViewGoto,
-  frm_MarkCoordinatesEdit,
+  frm_MarkEditPointCoordinates,
+  frm_MarkEditPathCoordinates,
   frm_MarkEditPointNew,
 
   i_PathConfig,
@@ -83,7 +84,8 @@ uses
 type
   TMarkDbGUIHelper = class
   private
-    FfrmMarkCoordinatesEdit: TfrmMarkCoordinatesEdit;
+    FfrmMarkEditPathCoordinates: TfrmMarkEditPathCoordinates;
+    FfrmMarkEditPointCoordinates: TfrmMarkEditPointCoordinates;
     FfrmMarkEditPointNew: TfrmMarkEditPointNew;
 
     FMarkSystem: IMarkSystem;
@@ -372,8 +374,14 @@ begin
   FImportDialog.Options := [ofAllowMultiSelect, ofEnableSizing];
 
 
-  FfrmMarkCoordinatesEdit :=
-    TfrmMarkCoordinatesEdit.Create(
+  FfrmMarkEditPathCoordinates :=
+    TfrmMarkEditPathCoordinates.Create(
+      ALanguageManager,
+      AVectorGeometryLonLatFactory
+    );
+
+  FfrmMarkEditPointCoordinates :=
+    TfrmMarkEditPointCoordinates.Create(
       ALanguageManager,
       AVectorGeometryLonLatFactory
     );
@@ -408,7 +416,8 @@ begin
   FreeAndNil(FExportDialog);
   FreeAndNil(FImportDialog);
 
-  FreeAndNil(FfrmMarkCoordinatesEdit);
+  FreeAndNil(FfrmMarkEditPathCoordinates);
+  FreeAndNil(FfrmMarkEditPointCoordinates);
   FreeAndNil(FfrmMarkEditPointNew);
   
   inherited;
@@ -1401,24 +1410,40 @@ type
 var
   VMark: IVectorDataItem;
   VGeometry: IGeometryLonLat;
+  VIsVisible: Boolean;
 begin
   if not IsMarksDBWritable then begin
     Exit; // db is read-only
   end;
 
   VMark := nil;
+  VIsVisible := True;
 
   case AMarkType of
-    1: begin
-      VGeometry := FfrmMarkCoordinatesEdit.GetLonLatPoint; // show editor #1
+
+    1: begin // point
+      VGeometry := FfrmMarkEditPointCoordinates.GetLonLatPoint; // show editor #1
       if VGeometry = nil then begin
         Exit; // cancelled by user
       end;
       VMark := FMarkSystem.MarkDb.Factory.CreateNewMark(VGeometry, '', '');
-      VMark := FfrmMarkEditPointNew.AddMark(VMark); // show editor #2
+      VMark := FfrmMarkEditPointNew.AddMark(VMark, VIsVisible); // show editor #2
     end;
-    
-    2, 3, 4: begin
+
+    2, 3: begin // path and polygon
+      if AMarkType = 2 then begin
+        VGeometry := FfrmMarkEditPathCoordinates.GetLonLatLine;
+      end else begin
+        VGeometry := FfrmMarkEditPathCoordinates.GetLonLatPolygon;
+      end;
+      if VGeometry = nil then begin
+        Exit;
+      end;
+      VMark := FMarkSystem.MarkDb.Factory.CreateNewMark(VGeometry, '', '');
+      VMark := Self.EditMarkModal(VMark, True, VIsVisible);
+    end;
+
+    4: begin // sector
       // todo
       MessageDlg('Not implemented yet...', mtInformation, [mbOk], 0);
     end;
@@ -1430,8 +1455,10 @@ begin
     // add mark into db
     FMarkSystem.MarkDb.UpdateMark(nil, VMark);
 
-    // navigate screen to mark position
-    AMapGoto.FitRectToScreen(VMark.Geometry.Bounds.Rect);
+    // navigate to mark's position
+    if VIsVisible then begin
+      AMapGoto.FitRectToScreen(VMark.Geometry.Bounds.Rect);
+    end;
   end;
 end;
 

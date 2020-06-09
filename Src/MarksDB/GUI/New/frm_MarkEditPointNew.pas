@@ -117,7 +117,10 @@ type
     ); reintroduce;
     destructor Destroy; override;
 
-    function AddMark(const AMark: IVectorDataItem): IVectorDataItem;
+    function AddMark(
+      const AMark: IVectorDataItem;
+      var AVisible: Boolean
+    ): IVectorDataItem;
   end;
 
 implementation
@@ -184,7 +187,10 @@ begin
   inherited;
 end;
 
-function TfrmMarkEditPointNew.AddMark(const AMark: IVectorDataItem): IVectorDataItem;
+function TfrmMarkEditPointNew.AddMark(
+  const AMark: IVectorDataItem;
+  var AVisible: Boolean
+): IVectorDataItem;
 var
   VAppearanceCaption: IAppearancePointCaption;
   VAppearanceIcon: IAppearancePointIcon;
@@ -260,6 +266,7 @@ begin
           frMarkCategory.GetCategory,
           MakeAppearance
         );
+      AVisible := chkVisible.Checked;
     end;
   finally
     FSourceMark := nil;

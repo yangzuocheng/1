@@ -1,4 +1,4 @@
-unit frm_MarkCoordinatesEdit;
+unit frm_MarkEditPointCoordinates;
 
 interface
 
@@ -16,7 +16,7 @@ uses
   u_CommonFormAndFrameParents;
 
 type
-  TfrmMarkCoordinatesEdit = class(TFormWitghLanguageManager)
+  TfrmMarkEditPointCoordinates = class(TFormWitghLanguageManager)
     lblCoords: TLabel;
     edtCoords: TEdit;
     btnNext: TButton;
@@ -43,7 +43,9 @@ resourcestring
 
 {$R *.dfm}
 
-constructor TfrmMarkCoordinatesEdit.Create(
+{ TfrmMarkEditPointCoordinates }
+
+constructor TfrmMarkEditPointCoordinates.Create(
   const ALanguageManager: ILanguageManager;
   const AGeometryLonLatFactory: IGeometryLonLatFactory
 );
@@ -53,12 +55,12 @@ begin
   FFormatSettings.DecimalSeparator := '.';
 end;
 
-procedure TfrmMarkCoordinatesEdit.FormShow(Sender: TObject);
+procedure TfrmMarkEditPointCoordinates.FormShow(Sender: TObject);
 begin
   edtCoords.SetFocus;
 end;
 
-function TfrmMarkCoordinatesEdit.GetLonLatPoint: IGeometryLonLatPoint;
+function TfrmMarkEditPointCoordinates.GetLonLatPoint: IGeometryLonLatPoint;
 var
   I: Integer;
   VStr: string;
