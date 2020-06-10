@@ -84,8 +84,6 @@ type
     procedure btnSetAsTemplateClick(Sender: TObject);
     procedure imgIconMouseDown(Sender: TObject);
   private
-    FFormatSettings: TFormatSettings;
-    FCoordFromStringParser: ICoordFromStringParser;
     FGeometryFactory: IGeometryLonLatFactory;
     FSourceMark: IVectorDataItem;
     FCategoryDB: IMarkCategoryDB;
@@ -132,6 +130,7 @@ uses
   i_GeometryLonLat,
   i_Category,
   i_MarkFactoryConfig,
+  u_MarkEditCoordinatesHelper,
   u_ResStrings;
 
 {$R *.dfm}
@@ -153,9 +152,6 @@ constructor TfrmMarkEditPointNew.Create(
 begin
   inherited Create(ALanguageManager);
 
-  FFormatSettings.DecimalSeparator := '.';
-
-  FCoordFromStringParser := ACoordFromStringParser;
   FCategoryDB := ACategoryDB;
   FGeometryFactory := AGeometryFactory;
   FAppearanceOfMarkFactory := AAppearanceOfMarkFactory;
@@ -363,37 +359,13 @@ begin
 end;
 
 procedure TfrmMarkEditPointNew.SetLonLat(const APoint: TDoublePoint);
-
-  function CoordToText(const ACoord: Double): string;
-  var
-    I: Integer;
-    VLen: Integer;
-  begin
-    Result := FormatFloat('0.00000000', ACoord, FFormatSettings);
-
-    // 12.3450000 -> 12.345
-    // 12.0000000 -> 12.0
-
-    VLen := Length(Result);
-    for I := VLen downto 1 do begin
-      if Result[I] = '0' then begin
-        Dec(VLen);
-      end else begin
-        Break;
-      end;
-    end;
-
-    if VLen <> Length(Result) then begin
-      if Result[VLen] = '.' then begin
-        Inc(VLen);
-      end;
-      SetLength(Result, VLen);
-    end;
-  end;
-
+var
+  VLat, VLon: string;
 begin
-  edtLon.Text := CoordToText(APoint.X);
-  edtLat.Text := CoordToText(APoint.Y);
+  TMarkEditCoordinatesHelper.CoordinatesToStr(APoint, VLat, VLon);
+  
+  edtLat.Text := VLat;
+  edtLon.Text := VLon;
 end;
 
 end.

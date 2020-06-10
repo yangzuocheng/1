@@ -34,6 +34,7 @@ uses
   i_MapViewGoto,
   frm_MarkEditPointCoordinates,
   frm_MarkEditPathCoordinates,
+  frm_MarkEditSectorCoordinates,
   frm_MarkEditPointNew,
 
   i_PathConfig,
@@ -84,6 +85,7 @@ uses
 type
   TMarkDbGUIHelper = class
   private
+    FfrmMarkEditSectorCoordinates: TfrmMarkEditSectorCoordinates;
     FfrmMarkEditPathCoordinates: TfrmMarkEditPathCoordinates;
     FfrmMarkEditPointCoordinates: TfrmMarkEditPointCoordinates;
     FfrmMarkEditPointNew: TfrmMarkEditPointNew;
@@ -374,6 +376,12 @@ begin
   FImportDialog.Options := [ofAllowMultiSelect, ofEnableSizing];
 
 
+  FfrmMarkEditSectorCoordinates :=
+    TfrmMarkEditSectorCoordinates.Create(
+      ALanguageManager,
+      AVectorGeometryLonLatFactory
+    );
+
   FfrmMarkEditPathCoordinates :=
     TfrmMarkEditPathCoordinates.Create(
       ALanguageManager,
@@ -416,6 +424,7 @@ begin
   FreeAndNil(FExportDialog);
   FreeAndNil(FImportDialog);
 
+  FreeAndNil(FfrmMarkEditSectorCoordinates);
   FreeAndNil(FfrmMarkEditPathCoordinates);
   FreeAndNil(FfrmMarkEditPointCoordinates);
   FreeAndNil(FfrmMarkEditPointNew);
@@ -1320,97 +1329,88 @@ begin
   end;
 end;
 
+type
+  TVectorDataItemArray = array of IVectorDataItem;
+
+// fetch duplicates from DB into RAM
+function GetDuplicates(
+  const AMarkSystem: IMarkSystem;
+  const AGeometry: IGeometryLonLat
+): TVectorDataItemArray;
+var
+  I, J: Integer;
+  VList: IMarkCategoryList;
+  VSubset: IVectorItemSubset;
+begin
+  Result := nil;
+
+  VList := AMarkSystem.CategoryDB.GetCategoriesList;
+
+  VSubset :=
+    AMarkSystem.MarkDb.GetMarkSubsetByCategoryListInRect(
+      AGeometry.Bounds.Rect,
+      VList,
+      True, // include hidden marks
+      DoublePoint(0, 0)
+    );
+
+  if not Assigned(VSubset) then begin
+    Exit;
+  end;
+
+  J := 0;
+  for I := 0 to VSubset.Count - 1 do begin
+    if AGeometry.IsSameGeometry(VSubset.Items[I].Geometry) then begin
+      SetLength(Result, J+1);
+      Result[J] := VSubset.Items[I];
+      Inc(J);
+    end;
+  end;
+end;
+
+function AllowDeleteDuplicates(
+  const ADuplicates: TVectorDataItemArray
+): Boolean;
+var
+  VMsg: string;
+  VDuplicatesCount : Integer;
+begin
+  Result := True;
+
+  VDuplicatesCount := Length(ADuplicates);
+
+  if VDuplicatesCount > 0 then begin
+    if Length(ADuplicates) = 1 then begin
+      VMsg := Format(
+        _('There is a Mark with same coordinates ("%s").' + #13#10 +
+          'Do you want to replace it?'),
+        [ADuplicates[0].Name]
+      );
+    end else begin
+      VMsg := Format(
+        _('There are %d Marks with same coordinates.' + #13#10 +
+          'Do you want to replace them all with the new mark?'),
+        [Length(ADuplicates)]
+      );
+    end;
+
+    if MessageDlg(VMsg, mtConfirmation, [mbYes, mbCancel], 0) <> mrYes then begin
+      Result := False;
+    end;
+  end;
+end;
+
 procedure TMarkDbGUIHelper.AddGeometryModal(
   const AMarkType: Byte;
   const AMapGoto: IMapViewGoto
 );
-
-type
-  TVectorDataItemArray = array of IVectorDataItem;
-
-  function IsGeometryExists(
-    const AGeometry: IGeometryLonLat;
-    out AItems: TVectorDataItemArray
-  ): Boolean;
-  var
-    I, J: Integer;
-    VList: IMarkCategoryList;
-    VSubset: IVectorItemSubset;
-  begin
-    AItems := nil;
-
-    VList := FMarkSystem.CategoryDB.GetCategoriesList;
-
-    VSubset :=
-      FMarkSystem.MarkDb.GetMarkSubsetByCategoryListInRect(
-        AGeometry.Bounds.Rect,
-        VList,
-        True, // include hidden marks
-        DoublePoint(0, 0)
-      );
-
-    if not Assigned(VSubset) then begin
-      Result := False;
-      Exit;
-    end;
-    
-    J := 0;
-    for I := 0 to VSubset.Count - 1 do begin
-      if AGeometry.IsSameGeometry(VSubset.Items[I].Geometry) then begin
-        SetLength(AItems, J+1);
-        AItems[J] := VSubset.Items[I];
-        Inc(J);
-      end;
-    end;
-
-    Result := J > 0;
-  end;
-
-  function AllowAddGeometry(const AMark: IVectorDataItem): Boolean;
-  var
-    I: Integer;
-    VMsg: string;
-    VResult: Integer;
-    VItems: TVectorDataItemArray;
-  begin
-    Result := AMark <> nil;
-
-    if Result and IsGeometryExists(AMark.Geometry, VItems) then begin
-
-      if Length(VItems) = 1 then begin
-        VMsg := Format(
-          _('There is a Mark with same coordinates ("%s").' + #13#10 +
-            'Do you want to replace it?'),
-          [VItems[0].Name]
-        );
-      end else begin
-        VMsg := Format(
-          _('There are %d Marks with same coordinates.' + #13#10 +
-            'Do you want to replace them all with the new mark?'),
-          [Length(VItems)]
-        );
-      end;
-
-      VResult := MessageDlg(VMsg, mtConfirmation, [mbYes, mbCancel], 0);
-
-      case VResult of
-        mrYes: begin
-          for I := 0 to Length(VItems) - 1 do begin
-            // delete marks with same coordinates from db
-            FMarkSystem.MarkDb.UpdateMark(VItems[I], nil);
-          end;
-        end;
-        mrCancel: begin
-          Result := False;
-        end;
-      end;
-    end;
-  end;
-
 var
+  I: Integer;
   VMark: IVectorDataItem;
   VGeometry: IGeometryLonLat;
+  VSectorPoint, VSectorPoly: IGeometryLonLat;
   VIsVisible: Boolean;
+  VDuplicates: TVectorDataItemArray;
 begin
   if not IsMarksDBWritable then begin
     Exit; // db is read-only
@@ -1424,7 +1424,7 @@ begin
     1: begin // point
       VGeometry := FfrmMarkEditPointCoordinates.GetLonLatPoint; // show editor #1
       if VGeometry = nil then begin
-        Exit; // cancelled by user
+        Exit; // cancelled by user from editor #1
       end;
       VMark := FMarkSystem.MarkDb.Factory.CreateNewMark(VGeometry, '', '');
       VMark := FfrmMarkEditPointNew.AddMark(VMark, VIsVisible); // show editor #2
@@ -1444,21 +1444,35 @@ begin
     end;
 
     4: begin // sector
-      // todo
+      if not FfrmMarkEditSectorCoordinates.GetLonLatSector(VSectorPoint, VSectorPoly) then begin
+        Exit;
+      end;
       MessageDlg('Not implemented yet...', mtInformation, [mbOk], 0);
     end;
   else
     raise Exception.CreateFmt('Unexpected MarkType value: %d', [AMarkType]);
   end;
 
-  if AllowAddGeometry(VMark) then begin
-    // add mark into db
-    FMarkSystem.MarkDb.UpdateMark(nil, VMark);
+  if VMark = nil then begin
+    Exit; // cancelled by user from editor #2
+  end;
 
-    // navigate to mark's position
-    if VIsVisible then begin
-      AMapGoto.FitRectToScreen(VMark.Geometry.Bounds.Rect);
+  VDuplicates := GetDuplicates(FMarkSystem, VMark.Geometry);
+
+  if AllowDeleteDuplicates(VDuplicates) then begin
+    for I := 0 to Length(VDuplicates) - 1 do begin
+      FMarkSystem.MarkDb.UpdateMark(VDuplicates[I], nil);
     end;
+  end else if Length(VDuplicates) > 0 then begin
+    Exit; // there are some duplicates but user don't allow delete them
+  end;
+
+  // add mark into db
+  FMarkSystem.MarkDb.UpdateMark(nil, VMark);
+
+  // navigate to mark's position
+  if VIsVisible then begin
+    AMapGoto.FitRectToScreen(VMark.Geometry.Bounds.Rect);
   end;
 end;
 

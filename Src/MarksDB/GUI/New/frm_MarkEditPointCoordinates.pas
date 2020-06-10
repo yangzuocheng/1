@@ -13,7 +13,8 @@ uses
   t_GeoTypes,
   i_LanguageManager,
   i_GeometryLonLat,
-  i_GeometryLonLatFactory,  
+  i_GeometryLonLatFactory,
+  u_MarkEditCoordinatesHelper,
   u_CommonFormAndFrameParents;
 
 type
@@ -23,8 +24,8 @@ type
     btnNext: TButton;
     btnCancel: TButton;
     procedure FormShow(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
-    FFormatSettings: TFormatSettings;
     FGeometryLonLatFactory: IGeometryLonLatFactory;
   public
     constructor Create(
@@ -37,11 +38,6 @@ type
 
 implementation
 
-resourcestring
-  rsParsingCoordinatesError = 'Parsing coordinates error!';
-  rsInvalidLatFmt = 'Invalid Latitude "%s"';
-  rsInvalidLonFmt = 'Invalid Longitude "%s"';
-
 {$R *.dfm}
 
 { TfrmMarkEditPointCoordinates }
@@ -53,7 +49,6 @@ constructor TfrmMarkEditPointCoordinates.Create(
 begin
   inherited Create(ALanguageManager);
   FGeometryLonLatFactory := AGeometryLonLatFactory;
-  FFormatSettings.DecimalSeparator := '.';
 end;
 
 procedure TfrmMarkEditPointCoordinates.FormShow(Sender: TObject);
@@ -61,11 +56,17 @@ begin
   edtCoords.SetFocus;
 end;
 
+procedure TfrmMarkEditPointCoordinates.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  if ModalResult = mrOk then begin
+    CanClose := Trim(edtCoords.Text) <> '';
+  end;
+end;
+
 function TfrmMarkEditPointCoordinates.GetLonLatPoint: IGeometryLonLatPoint;
 var
-  I: Integer;
   VStr: string;
-  VLat, VLon: string;
   VPoint: TDoublePoint;
 begin
   Result := nil;
@@ -79,31 +80,9 @@ begin
     Exit;
   end;
 
-  VLat := '';
-  VLon := '';
-
-  I := Pos(',', VStr);
-  if I > 0 then begin
-    VLat := Trim( Copy(VStr, 1, I-1) );
-    VLon := Trim( Copy(VStr, I+1) );
+  if TMarkEditCoordinatesHelper.TryStrToCoordinates(VStr, VPoint) then begin
+    Result := FGeometryLonLatFactory.CreateLonLatPoint(VPoint);
   end;
-
-  if (VLat = '') or (VLon = '') then begin
-    MessageDlg(rsParsingCoordinatesError, mtError, [mbOK], 0);
-    Exit;
-  end;
-
-  if not TryStrToFloat(VLat, VPoint.Y, FFormatSettings) then begin
-    MessageDlg(Format(rsInvalidLatFmt, [VLat]), mtError, [mbOK], 0);
-    Exit;
-  end;
-
-  if not TryStrToFloat(VLon, VPoint.X, FFormatSettings) then begin
-    MessageDlg(Format(rsInvalidLonFmt, [VLon]), mtError, [mbOK], 0);
-    Exit;
-  end;
-
-  Result := FGeometryLonLatFactory.CreateLonLatPoint(VPoint);
 end;
 
 end.

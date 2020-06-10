@@ -13,6 +13,7 @@ object frmMarkEditPointCoordinates: TfrmMarkEditPointCoordinates
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCloseQuery = FormCloseQuery
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
