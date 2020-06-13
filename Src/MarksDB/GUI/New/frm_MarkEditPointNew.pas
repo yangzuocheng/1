@@ -17,13 +17,7 @@ uses
   u_CommonFormAndFrameParents,
   i_LanguageManager,
   i_PathConfig,
-  i_ProjectionSetChangeable,
-  i_LocalCoordConverterChangeable,
-  i_CoordFromStringParser,
-  i_CoordToStringConverter,
-  i_CoordRepresentationConfig,
   i_MarkPicture,
-  i_GeometryLonLatFactory,
   i_VectorDataItemSimple,
   i_Appearance,
   i_AppearanceOfMarkFactory,
@@ -84,7 +78,6 @@ type
     procedure btnSetAsTemplateClick(Sender: TObject);
     procedure imgIconMouseDown(Sender: TObject);
   private
-    FGeometryFactory: IGeometryLonLatFactory;
     FSourceMark: IVectorDataItem;
     FCategoryDB: IMarkCategoryDB;
     FAppearanceOfMarkFactory: IAppearanceOfMarkFactory;
@@ -102,16 +95,10 @@ type
     constructor Create(
       const ALanguageManager: ILanguageManager;
       const AMediaPath: IPathConfig;
-      const AProjectionSetChangeable: IProjectionSetChangeable;
-      const AGeometryFactory: IGeometryLonLatFactory;
       const AAppearanceOfMarkFactory: IAppearanceOfMarkFactory;
       const AMarkFactory: IMarkFactory;
       const ACategoryDB: IMarkCategoryDB;
-      const APictureList: IMarkPictureList;
-      const AViewPortState: ILocalCoordConverterChangeable;
-      const ACoordRepresentationConfig: ICoordRepresentationConfig;
-      const ACoordFromStringParser: ICoordFromStringParser;
-      const ACoordToStringConverter: ICoordToStringConverterChangeable
+      const APictureList: IMarkPictureList
     ); reintroduce;
     destructor Destroy; override;
 
@@ -138,22 +125,15 @@ uses
 constructor TfrmMarkEditPointNew.Create(
   const ALanguageManager: ILanguageManager;
   const AMediaPath: IPathConfig;
-  const AProjectionSetChangeable: IProjectionSetChangeable;
-  const AGeometryFactory: IGeometryLonLatFactory;
   const AAppearanceOfMarkFactory: IAppearanceOfMarkFactory;
   const AMarkFactory: IMarkFactory;
   const ACategoryDB: IMarkCategoryDB;
-  const APictureList: IMarkPictureList;
-  const AViewPortState: ILocalCoordConverterChangeable;
-  const ACoordRepresentationConfig: ICoordRepresentationConfig;
-  const ACoordFromStringParser: ICoordFromStringParser;
-  const ACoordToStringConverter: ICoordToStringConverterChangeable
+  const APictureList: IMarkPictureList
 );
 begin
   inherited Create(ALanguageManager);
 
   FCategoryDB := ACategoryDB;
-  FGeometryFactory := AGeometryFactory;
   FAppearanceOfMarkFactory := AAppearanceOfMarkFactory;
   FMarkFactory := AMarkFactory;
   FPictureList := APictureList;
@@ -200,10 +180,9 @@ begin
   lblReadOnly.Visible := False;
 
   FSourceMark := AMark;
-  frMarkDescription.Description := '';
+
   frSelectPicture.Visible := False;
   frSelectPicture.Parent := Self;
-
   frSelectedPicture.Parent := pnlImage;
 
   if Supports(AMark.Appearance, IAppearancePointIcon, VAppearanceIcon) then begin

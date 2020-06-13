@@ -6,6 +6,7 @@ uses
   SysUtils,
   Dialogs,
   UITypes,
+  u_Dialogs,
   t_GeoTypes;
 
 type
@@ -54,17 +55,17 @@ begin
   end;
 
   if (VLat = '') or (VLon = '') then begin
-    MessageDlg(rsParsingCoordinatesError, mtError, [mbOK], 0);
+    _MessageDlg(rsParsingCoordinatesError, mtError, [mbOK], 0);
     Exit;
   end;
 
   if not TryStrToFloat(VLat, APoint.Y, GFormatSettings) then begin
-    MessageDlg(Format(rsInvalidLatFmt, [VLat]), mtError, [mbOK], 0);
+    _MessageDlg(Format(rsInvalidLatFmt, [VLat]), mtError, [mbOK], 0);
     Exit;
   end;
 
   if not TryStrToFloat(VLon, APoint.X, GFormatSettings) then begin
-    MessageDlg(Format(rsInvalidLonFmt, [VLon]), mtError, [mbOK], 0);
+    _MessageDlg(Format(rsInvalidLonFmt, [VLon]), mtError, [mbOK], 0);
     Exit;
   end;
 

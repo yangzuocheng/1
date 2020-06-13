@@ -737,6 +737,7 @@ uses
   frm_MarkEditPathCoordinates in 'Src\MarksDB\GUI\New\frm_MarkEditPathCoordinates.pas' {frmMarkEditPathCoordinates},
   frm_MarkEditPointCoordinates in 'Src\MarksDB\GUI\New\frm_MarkEditPointCoordinates.pas' {frmMarkEditPointCoordinates},
   frm_MarkEditPointNew in 'Src\MarksDB\GUI\New\frm_MarkEditPointNew.pas' {frmMarkEditPointNew},
+  frm_MarkEditSector in 'Src\MarksDB\GUI\New\frm_MarkEditSector.pas' {frmMarkEditSector},
   frm_MarkEditSectorCoordinates in 'Src\MarksDB\GUI\New\frm_MarkEditSectorCoordinates.pas' {frmMarkEditSectorCoordinates},
   u_MarkEditCoordinatesHelper in 'Src\MarksDB\GUI\New\u_MarkEditCoordinatesHelper.pas',
   fr_JpegImportOptions in 'Src\MarksDB\GUI\fr_JpegImportOptions.pas' {frJpegImportOptions: TFrame},

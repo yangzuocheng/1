@@ -52,10 +52,11 @@ type
       const AGeometryLonLatFactory: IGeometryLonLatFactory
     ); reintroduce;
 
-    function GetLonLatSector(
+    procedure GetLonLatSector(
       out ASectorPoint: IGeometryLonLat;
-      out ASectorPolygon: IGeometryLonLat
-    ): Boolean;
+      out ASectorPolygon: IGeometryLonLat;
+      out ASectorIdentityStr: string
+    );
   end;
 
 implementation
@@ -98,15 +99,18 @@ begin
   end;
 end;
 
-function TfrmMarkEditSectorCoordinates.GetLonLatSector(
+procedure TfrmMarkEditSectorCoordinates.GetLonLatSector(
   out ASectorPoint: IGeometryLonLat;
-  out ASectorPolygon: IGeometryLonLat
-): Boolean;
+  out ASectorPolygon: IGeometryLonLat;
+  out ASectorIdentityStr: string
+);
 var
   VStr: string;
   VPoint: TDoublePoint;
 begin
-  Result := False;
+  ASectorPoint := nil;
+  ASectorPolygon := nil;
+  ASectorIdentityStr := '';
 
   if ShowModal <> mrOk then begin
     Exit;
@@ -124,7 +128,9 @@ begin
   ASectorPoint := FGeometryLonLatFactory.CreateLonLatPoint(VPoint);
   ASectorPolygon := CreateSectorPolygon(VPoint, seAzimuth.Value, seAngle.Value, seLen.Value);
 
-  Result := Assigned(ASectorPoint) and Assigned(ASectorPolygon);
+  ASectorIdentityStr :=
+    StringReplace(VStr, ' ', '', [rfReplaceAll]) + ',' +
+    IntToStr(seAzimuth.Value); 
 end;
 
 function CheckAzimuth(const AAzimuth: Double): Double; inline;

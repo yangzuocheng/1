@@ -51,7 +51,6 @@ object frmMarkEditSectorCoordinates: TfrmMarkEditSectorCoordinates
     Align = alCustom
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
-    ExplicitWidth = 329
   end
   object btnNext: TButton
     Left = 180
@@ -89,7 +88,7 @@ object frmMarkEditSectorCoordinates: TfrmMarkEditSectorCoordinates
     MaxValue = 360
     MinValue = 0
     TabOrder = 4
-    Value = 0
+    Value = 120
   end
   object seLen: TSpinEdit
     Left = 230
@@ -99,6 +98,6 @@ object frmMarkEditSectorCoordinates: TfrmMarkEditSectorCoordinates
     MaxValue = 999999999
     MinValue = 1
     TabOrder = 5
-    Value = 0
+    Value = 100
   end
 end
