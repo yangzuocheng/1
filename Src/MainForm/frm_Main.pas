@@ -278,6 +278,8 @@ type
     MainPopupMenu: TTBXPopupMenu;
     NMarkEdit: TTBXItem;
     NMarkDel: TTBXItem;
+    NSectorDel: TTBXItem;
+    NAllMarksDel: TTBXItem;
     NMarkOper: TTBXItem;
     NMarkNav: TTBXItem;
     NMarkExport: TTBXItem;
@@ -622,6 +624,8 @@ type
     procedure mapDblClick(Sender: TObject);
     procedure NMarkEditClick(Sender: TObject);
     procedure NMarkDelClick(Sender: TObject);
+    procedure NSectorDelClick(Sender: TObject);
+    procedure NAllMarksDelClick(Sender: TObject);
     procedure NMarkOperClick(Sender: TObject);
     procedure livecom1Click(Sender: TObject);
     procedure tbitmCopyToClipboardMainMapUrlClick(Sender: TObject);
@@ -4625,6 +4629,21 @@ begin
   end;
 end;
 
+procedure TfrmMain.NSectorDelClick(Sender: TObject);
+var
+  VMark: IVectorDataItem;
+begin
+  VMark := FSelectedMark;
+  if VMark <> nil then begin
+    FMarkDBGUI.DeleteSectorModal(VMark.MainInfo as IMarkId, Handle);
+  end;
+end;
+
+procedure TfrmMain.NAllMarksDelClick(Sender: TObject);
+begin
+  FMarkDBGUI.DeleteAllMarksFromDbModal(Handle);
+end;
+
 procedure TfrmMain.NMarkOperClick(Sender: TObject);
 var
   VMark: IVectorDataItem;
@@ -6197,6 +6216,7 @@ begin
   tbitmProperties.Visible := VMark <> nil;
   NMarkExport.Visible := VMark <> nil;
   NMarkDel.Visible := VMark <> nil;
+  NSectorDel.Visible := VMark <> nil;
   tbsprtMainPopUp0.Visible := VMark <> nil;
   NMarkOper.Visible := (VMark <> nil) or (FSelectedWiki <> nil);
   NMarkNav.Visible := VMark <> nil;

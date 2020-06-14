@@ -30,6 +30,7 @@ uses
   Forms,
   UITypes,
 
+  StrUtils,
   t_GeoTypes,
   i_MapViewGoto,
   frm_MarkEditPointCoordinates,
@@ -128,6 +129,13 @@ type
       const AMarkType: Byte;
       const AMapGoto: IMapViewGoto
     );
+    function DeleteSectorModal(
+      const AMarkId: IMarkId;
+      const AHandle: THandle
+    ): Boolean;
+    function DeleteAllMarksFromDbModal(
+      const AHandle: THandle
+    ): Boolean;
 
     function GetMarkIdCaption(const AMarkId: IMarkId): string;
 
@@ -1555,6 +1563,125 @@ begin
   // navigate to mark's position
   if VIsVisible then begin
     AMapGoto.FitRectToScreen(VMark.Geometry.Bounds.Rect);
+  end;
+end;
+
+function TMarkDbGUIHelper.DeleteSectorModal(
+  const AMarkId: IMarkId;
+  const AHandle: THandle
+): Boolean;
+
+  function GetSectorIdentityStr(const ADesc: string): string;
+  var
+    I, J: Integer;
+    VDescription: string;
+  begin
+    Result := '';
+    VDescription := LowerCase(ADesc);
+    I := Pos('<!-- sas.sector ', VDescription);
+    if I > 0 then begin
+      J := PosEx(' -->', VDescription, I);
+      if J > 0 then begin
+        Inc(J, 4);
+        Result := Copy(VDescription, I, J-I+1);
+      end;
+    end;
+  end;
+
+  function IsItSingleSector(const AItems: TVectorDataItemArray): Boolean;
+  var
+    I: Integer;
+    VIsPointFound, VIsPolyFound: Boolean;
+  begin
+    // single sector is one point and one poly
+
+    Result := False;
+
+    VIsPointFound := False;
+    VIsPolyFound := False;
+
+    for I := 0 to Length(AItems) - 1 do begin
+      if Supports(AItems[I].Geometry, IGeometryLonLatPoint) then begin
+        if not VIsPointFound then begin
+          VIsPointFound := True;
+        end else begin
+          VIsPointFound := False; // second point found
+          Break;
+        end;
+      end else
+      if Supports(AItems[I].Geometry, IGeometryLonLatPolygon) then begin
+        if not VIsPolyFound then begin
+          VIsPolyFound := True;
+        end else begin
+          VIsPolyFound := False; // second poly found
+          Break;
+        end;
+      end;
+    end;
+
+    Result := VIsPointFound and VIsPolyFound;
+  end;
+
+var
+  I: Integer;
+  VMessage: string;
+  VMark: IVectorDataItem;
+  VSectorIdentityStr: string;
+  VSectorItems: TVectorDataItemArray;
+begin
+  Result := False;
+
+  if not IsMarksDBWritable or (AMarkId = nil) then begin
+    Exit;
+  end;
+
+  VMark := FMarkSystem.MarkDb.GetMarkByID(AMarkId);
+  VSectorIdentityStr := GetSectorIdentityStr(VMark.Desc);
+
+  if not (AMarkId.MarkType in [midPoint, midPoly]) or (VSectorIdentityStr = '') then begin
+    _MessageDlg(_('Selected placemark is not a sector part!'), mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  VSectorItems := GetDuplicates(FMarkSystem, VSectorIdentityStr);
+
+  if
+    IsItSingleSector(VSectorItems) or
+    ( (Length(VSectorItems) = 1) and VMark.IsEqual(VSectorItems[0]) )
+  then begin
+    VMessage := Format(
+      _('Are you sure you want to delete sector with name "%0:s"?'), [AMarkId.Name]
+    );
+  end else begin
+    VMessage := Format(
+      _('There are %d parts with same sector identity!' + #13#10 +
+        'Are you sure you want to delete all this parts?'),
+      [Length(VSectorItems)]
+    );
+  end;
+
+  if MessageBox(AHandle, PChar(VMessage), PChar(SAS_MSG_coution), MB_YESNO or MB_ICONQUESTION) = IDYES then begin
+    for I := 0 to Length(VSectorItems) - 1 do begin
+      FMarkSystem.MarkDb.UpdateMark(VSectorItems[I], nil);
+    end;
+    Result := True;
+  end;
+end;
+
+function TMarkDbGUIHelper.DeleteAllMarksFromDbModal(const AHandle: THandle): Boolean;
+var
+  VMessage: string;
+  VList: IMarkCategoryList;
+begin
+  Result := False;
+  if not IsMarksDBWritable then begin
+    Exit;
+  end;
+  VMessage := _('Are you sure you want to delete ALL plasemarks from DB?');
+  if MessageBox(AHandle, PChar(VMessage), PChar(SAS_MSG_coution), MB_YESNO or MB_ICONQUESTION) = IDYES then begin
+    VList := FMarkSystem.CategoryDB.GetCategoriesList;
+    FMarkSystem.DeleteCategoryListWithMarks(VList);
+    Result := True;
   end;
 end;
 

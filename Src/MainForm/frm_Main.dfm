@@ -3671,6 +3671,11 @@ object frmMain: TfrmMain
       Caption = 'Delete'
       Hint = ''
     end
+    object NSectorDel: TTBXItem
+      Caption = 'Delete Sector'
+      ImageIndex = 30
+      OnClick = NSectorDelClick
+    end    
     object NMarkOper: TTBXItem
       ImageIndex = 10
       OnClick = NMarkOperClick
@@ -3733,6 +3738,11 @@ object frmMain: TfrmMain
       OnClick = NaddPointClick
       Caption = 'Add Placemark'
       Hint = ''
+    end
+    object NAllMarksDel: TTBXItem
+      Caption = 'Delete ALL marks from DB'
+      ImageIndex = 30
+      OnClick = NAllMarksDelClick
     end
     object tbsprtMainPopUp1: TTBXSeparatorItem
     end
