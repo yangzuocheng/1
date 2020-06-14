@@ -1583,7 +1583,7 @@ function TMarkDbGUIHelper.DeleteSectorModal(
       J := PosEx(' -->', VDescription, I);
       if J > 0 then begin
         Inc(J, 4);
-        Result := Copy(VDescription, I, J-I+1);
+        Result := Copy(VDescription, I, J-I);
       end;
     end;
   end;
